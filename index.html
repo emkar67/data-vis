@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Visualizer</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- <link rel="icon" href="favicon.ico" /> -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+  <script src="main.js" defer></script>
+</head>
+
+<body>
+<header class="header">
+  <div class="container nav">
+    <a class="logo" href="#top">DATA VIS</a>
+    <button class="hamburger" id="menuBtn" aria-label="Menu" type="button">☰</button>
+
+    <nav class="menu" id="menu">
+      <!-- Language dropdown -->
+      <div class="lang-wrap">
+        <button class="lang-btn" id="langBtn" type="button" aria-haspopup="true" aria-expanded="false">
+          🌐 Język/Language
+        </button>
+        <div class="lang-dropdown" id="langDropdown" role="menu" aria-label="Wybór języka">
+          <button class="lang-option" type="button" data-lang="pl" role="menuitem">Polski</button>
+          <button class="lang-option" type="button" data-lang="en" role="menuitem">English</button>
+          <button class="lang-option" type="button" data-lang="de" role="menuitem">Deutsch</button>
+        </div>
+      </div>
+
+      <a href="#cit" data-i18n="nav.calculator">Kalkulator</a>
+      <a href="#podsumowanie" data-i18n="nav.summary">Podsumowanie</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="container">
+      <h1 data-i18n="hero.title">Data Visualizer</h1>
+      <p class="muted" data-i18n="hero.subtitle">Salda rachunków bankowych dla spółek A i B.</p>
+
+      <p class="text">
+        <b>
+          <span data-i18n="hero.note1">Edytowalne pola podświetlane są na żółto.</span>
+        </b>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="cit">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title" data-i18n="nav.calculator">Kalkulator</h2>
+
+        <div class="section-actions">
+          <!-- Clear -->
+          <button class="btn" id="clearDataBtn" type="button">
+            <span class="btn-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <!-- file outline -->
+                <path
+                  fill="currentColor"
+                  d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z"
+                />
+                <!-- X mark -->
+                <path
+                  d="M8.2 10.5L15.9 18.5M16.2 10.5L7.9 18.5"
+                  stroke="rgba(10,16,28,0.85)"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </span>
+            <span class="btn-text" data-i18n="clear.data">Wyczyść dane</span>
+          </button>
+
+          <!-- Import CSV -->
+          <button class="btn" id="importCsvBtn" type="button">
+            <span class="btn-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <!-- file outline -->
+                <path fill="currentColor" d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z"/>
+                <!-- text lines -->
+                <path d="M8 11h8M8 14h8M8 17h5"
+                      stroke="rgba(10,16,28,0.85)" stroke-width="1.7" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="btn-text" data-i18n="import.csv">Importuj CSV</span>
+          </button>
+
+          <!-- Import Excel -->
+          <button class="btn" id="importXlsxBtn" type="button">
+            <span class="btn-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <!-- file outline -->
+                <path fill="currentColor" d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z"/>
+                <!-- grid -->
+                <path d="M10 10v9M13 10v9M8 13h7.2M8 16h7.2"
+                      stroke="rgba(10,16,28,0.85)" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <span class="btn-text" data-i18n="import.excel">Importuj Excel</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="companies3" id="companies-wrapper">
+        <!-- karta generowana przez JS -->
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="podsumowanie">
+    <div class="container">
+      <h2 data-i18n="section.summary">Podsumowanie</h2>
+
+      <div class="card">
+        <table class="data-table summary-table">
+          <thead>
+            <tr>
+              <th data-i18n="summary.company">Spółka</th>
+              <th class="num" data-i18n="summary.balance">Suma sald</th>
+            </tr>
+          </thead>
+          <tbody id="summary-body">
+            <!-- Wiersze podsumowania generowane przez JS -->
+          </tbody>
+          <tfoot>
+            <tr>
+              <th data-i18n="summary.total">Razem</th>
+              <th class="num js-summary-total">0,00</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="export-actions">
+        <!-- Export CSV -->
+        <button class="btn" id="exportCsvBtn" type="button">
+          <span class="btn-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <!-- file outline -->
+              <path fill="currentColor" d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z"/>
+              <!-- text lines -->
+              <path d="M8 11h8M8 14h8M8 17h5"
+                    stroke="rgba(10,16,28,0.85)" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="btn-text" data-i18n="export.csv">Eksportuj CSV</span>
+        </button>
+
+        <!-- Export Excel -->
+        <button class="btn" id="exportXlsxBtn" type="button">
+          <span class="btn-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <!-- file outline -->
+              <path fill="currentColor" d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z"/>
+              <!-- grid -->
+              <path d="M10 10v9M13 10v9M8 13h7.2M8 16h7.2"
+                    stroke="rgba(10,16,28,0.85)" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="btn-text" data-i18n="export.excel">Eksportuj Excel</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- SZABLON KARTY -->
+<template id="company-template">
+  <div class="card company">
+    <h3 class="company-title">
+      <span class="js-company-title">Salda Rachunków bankowych</span>
+    </h3>
+
+    <div class="company-layout">
+      <div class="company-left">
+
+        <!-- A -->
+        <div class="block">
+          <div class="block-head"><span class="js-block-a">A</span></div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="js-th-account">Rachunek</th>
+                <th class="num js-th-amount">Kwota</th>
+              </tr>
+            </thead>
+            <tbody class="js-bank-body" data-company="a"></tbody>
+          </table>
+
+          <div class="total-row">
+            <span class="total-label" data-i18n="label.total">Suma</span>
+            <div class="total-box js-total-a">zł 0,00<br>€ 0,00</div>
+          </div>
+        </div>
+
+        <!-- B -->
+        <div class="block">
+          <div class="block-head"><span class="js-block-b">B</span></div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="js-th-account">Rachunek</th>
+                <th class="num js-th-amount">Kwota</th>
+              </tr>
+            </thead>
+            <tbody class="js-bank-body" data-company="b"></tbody>
+          </table>
+
+          <div class="total-row">
+            <span class="total-label" data-i18n="label.total">Suma</span>
+            <div class="total-box js-total-b">zł 0,00<br>€ 0,00</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="company-bottom">
+        <!-- tu później dorzucimy np. wykres / KPI -->
+      </div>
+    </div>
+  </div>
+</template>
+
+<footer class="footer container">
+  <small>
+    © <span id="year"></span> emkar67 •
+    <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT</a> •
+    <a href="https://github.com/emkar67/data-vis" target="_blank" rel="noopener noreferrer">Repo</a>
+  </small>
+</footer>
+</body>
+</html>

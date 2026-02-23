@@ -1,0 +1,408 @@
+:root {
+  --bg: #0b1220;
+  --text: #e9eefc;
+  --muted: #c3b6e8;
+
+  /* pink / magenta accent */
+  --accent: #ce79bc;
+
+  --border: rgba(255, 255, 255, 0.14);
+  --panel: rgba(255, 255, 255, 0.03);
+  --panel2: rgba(255, 255, 255, 0.06);
+
+  /* yellow = editable fields */
+  --edit-bg: rgba(214, 160, 0, 0.22);
+  --edit-border: rgba(214, 160, 0, 0.50);
+  --edit-focus: rgba(255, 208, 64, 0.95);
+  --edit-glow: rgba(255, 200, 0, 0.18);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: radial-gradient(1000px 600px at 20% 10%, #3b1642 0%, var(--bg) 60%);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.container{
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+}
+.muted { color: var(--muted); }
+
+.header {
+  position: sticky; top: 0; z-index: 10;
+  backdrop-filter: blur(8px);
+  background: rgba(11, 18, 32, 0.65);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+.logo { text-decoration: none; color: var(--text); font-weight: 900; letter-spacing: 1px; }
+
+.menu { display: flex; gap: 14px; align-items: center; }
+.menu a { color: var(--text); text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid transparent; transition: 0.2s; }
+.menu a:hover { border-color: var(--border); background: var(--panel2); }
+
+.hamburger { display: none; background: var(--panel2); color: var(--text); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+
+/* =========================
+   LANG DROPDOWN (header)
+   ========================= */
+.lang-wrap { position: relative; display: inline-flex; align-items: center; }
+.lang-btn { color: var(--text); background: transparent; border: 1px solid transparent; padding: 8px 12px; border-radius: 10px; cursor: pointer; transition: 0.2s; font: inherit; }
+.lang-btn:hover { border-color: var(--border); background: var(--panel2); }
+.lang-btn:focus { outline: none; border-color: var(--accent); }
+.lang-dropdown { position: absolute; top: calc(100% + 8px); left: 0; min-width: 180px; background: rgba(11, 18, 32, 0.92); border: 1px solid var(--border); border-radius: 12px; padding: 6px; display: none; z-index: 30; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+.lang-dropdown.open { display: grid; gap: 4px; }
+.lang-option { width: 100%; text-align: left; background: transparent; border: 1px solid transparent; color: var(--text); padding: 8px 10px; border-radius: 10px; cursor: pointer; font: inherit; }
+.lang-option:hover { background: var(--panel2); border-color: var(--border); }
+.lang-option.active { border-color: var(--accent); background: rgba(255,79,216,0.12); }
+/* ========================= */
+
+.hero { padding: 40px 0 20px; }
+.section { padding: 20px 0; }
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+}
+
+/* container for companies - ok even with 1 company */
+.companies3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; }
+
+/* 🔧 IMPORTANT: spacing/layout classes used by HTML */
+.company-layout { display: grid; gap: 16px; }
+.company-left { display: grid; gap: 16px; }
+.company-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.company-bottom .net { grid-column: 1 / span 2; }
+.company-settings{ margin-bottom: 16px; }
+
+.block { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--panel); }
+.block-head { padding: 10px 12px; font-weight: 800; background: var(--panel2); border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table td, .data-table th { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+.data-table .num { text-align: right; width: 140px; }
+
+.summary-table th { text-align: left; }
+.summary-table th.num { text-align: right; }
+
+.cell-input, .total-input, .name-input, .tax-custom-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 10px;
+  outline: none;
+  transition: 0.2s;
+}
+.cell-input:focus, .name-input:focus { border-color: var(--accent); }
+.auto-field { background: rgba(0, 0, 0, 0.2); color: var(--muted); cursor: not-allowed; }
+
+.total-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(255, 255, 255, 0.02); }
+.total-input { width: 140px; text-align: right; font-weight: 700; }
+
+.wynik .total-input,
+.net .total-input,
+.tax .total-input { width: 100%; }
+
+.field { display: grid; gap: 4px; padding: 8px 12px; }
+.field span { font-size: 12px; color: var(--muted); font-weight: 700; }
+
+.tax-grid { padding: 12px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+.tax-options { padding: 0; display: grid; gap: 8px; }
+.tax-opt { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; }
+.tax-custom-input { width: 60px; padding: 4px 8px; margin: 0 4px; }
+
+.tax-selected { display: grid; gap: 6px; padding: 8px; border: 1px solid var(--border); border-radius: 10px; }
+.tax-selected-label { font-size: 12px; color: var(--muted); font-weight: 700; }
+
+.name-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.name-field { display: grid; gap: 6px; }
+.name-field span { font-size: 12px; font-weight: 700; color: var(--muted); }
+
+.footer { padding: 40px 0; text-align: center; border-top: 1px solid var(--border); margin-top: 40px; }
+
+@media (max-width: 1200px) { .companies3 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 850px) {
+  .companies3 { grid-template-columns: 1fr; }
+  .name-grid { grid-template-columns: 1fr; }
+  .hamburger { display: block; }
+  .menu { display: none; flex-direction: column; position: absolute; top: 60px; right: 20px; background: var(--bg); border: 1px solid var(--border); padding: 10px; }
+  .menu.open { display: flex; }
+}
+
+/* =========================================
+   COMPANY NAMES: yellow only when EMPTY
+   ========================================= */
+.name-input:placeholder-shown {
+  background: var(--edit-bg);
+  border-color: var(--edit-border);
+}
+.name-input:placeholder-shown:focus {
+  border-color: var(--edit-focus);
+  box-shadow: 0 0 0 3px var(--edit-glow);
+}
+
+/* =========================================
+   AMOUNTS: yellow only when needs-fill
+   (no transfer link exclusions for 1-company setup)
+   ========================================= */
+.js-income-body tr:first-child .cell-input.needs-fill,
+.js-costs-body .cell-input.needs-fill {
+  background: var(--edit-bg);
+  border-color: var(--edit-border);
+  color: var(--text);
+}
+.js-income-body tr:first-child .cell-input.needs-fill:focus,
+.js-costs-body .cell-input.needs-fill:focus {
+  border-color: var(--edit-focus);
+  box-shadow: 0 0 0 3px var(--edit-glow);
+}
+
+/* =========================================
+   CIT "Inna": yellow only when selected + needs-fill
+   ========================================= */
+.tax-custom-input.is-custom-active.needs-fill {
+  background: var(--edit-bg);
+  border-color: var(--edit-border);
+}
+.tax-custom-input.is-custom-active.needs-fill:focus {
+  border-color: var(--edit-focus);
+  box-shadow: 0 0 0 3px var(--edit-glow);
+}
+
+/* =========================
+   EXPORT BUTTONS
+   ========================= */
+.export-actions{
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  transition: 0.2s;
+}
+
+.btn:hover{
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.22);
+}
+
+.btn:active{
+  transform: translateY(1px);
+}
+
+@media (max-width: 650px){
+  .export-actions .btn{ flex: 1; }
+}
+
+.btn-ico{
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+}
+.btn-ico svg{
+  width: 18px;
+  height: 18px;
+  display: block;
+  opacity: 0.9;
+}
+
+.btn{ display:inline-flex; align-items:center; gap:8px; }
+.btn-ico{ width:18px; height:18px; display:inline-flex; opacity:.9; }
+.btn-ico .ico{ width:18px; height:18px; display:block; }
+
+/* =========================
+   SECTION HEAD (title + actions)
+   ========================= */
+.section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin: 18px 0 12px;
+}
+
+.section-title{
+  margin: 0;
+}
+
+.section-actions{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+@media (max-width: 650px){
+  .section-head{ align-items: stretch; }
+  .section-actions{ width: 100%; }
+  .section-actions .btn{ flex: 1; }
+}
+
+/* =========================
+   Currency select (like lang button)
+   ========================= */
+.currency-select{
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  font: inherit;
+  width: 100%;
+}
+
+.currency-select:hover{
+  border-color: var(--border);
+  background: var(--panel2);
+}
+
+.currency-select:focus{
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* dropdown options (best-effort; browser renders these differently) */
+.currency-select option{
+  background: rgba(11, 18, 32, 0.95);
+  color: var(--text);
+}
+
+/* =========================
+   Amount + currency in one cell
+   ========================= */
+.amt-wrap{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.amt-input{
+  flex: 1;
+  min-width: 120px;
+}
+
+.amt-cur{
+  width: 88px;          /* zwarty select */
+  text-align: center;
+  padding: 8px 10px;    /* podobnie jak lang-btn */
+}
+
+.container{
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+/* węższy select waluty */
+.currency-select{
+  width: 72px;
+  padding: 7px 10px;
+  text-align: center;
+}
+
+/* jeśli używasz klas z układu "kwota + waluta w jednej komórce" */
+.amt-cur{
+  width: 72px;
+  padding: 7px 10px;
+}
+
+.summary-table tfoot th{
+  border-bottom: none;
+}
+
+/* Total w blokach A/B jako wieloliniowy "input look" */
+.total-box{
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-align: right;
+  line-height: 1.35;
+  min-width: 280px;      /* jak robiłeś 2x szerzej */
+}
+
+/* na mobile niech nie ciśnie */
+@media (max-width: 650px){
+  .total-box{ width: 100%; min-width: 0; }
+}
+
+/* Sumy A/B bez "inputowego" pudełka – tylko czysty tekst */
+.total-box{
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  min-width: 0;
+  box-shadow: none;
+
+  text-align: right;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.total-box{
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Wyrównanie nagłówków tabel do lewej */
+.data-table th{
+  text-align: left;
+}
+
+/* Jeśli kolumna "Kwota" była wcześniej wymuszana na prawo */
+.data-table th.num{
+  text-align: left;
+}
+
+/* Dla spójności: pierwsza kolumna (Rachunek) też zawsze w lewo */
+.data-table td:first-child,
+.data-table th:first-child{
+  text-align: left;
+}
+
+/* A/B: nagłówki w lewo */
+.data-table thead th{
+  text-align: left;
+}
+
+/* A/B: liczby w prawo (nagłówek i komórki) */
+.data-table thead th.num,
+.data-table td.num{
+  text-align: right;
+}
+
+/* Podsumowanie: nagłówek "Suma sald" i wartości mają być po prawej */
+.summary-table thead th.num,
+.summary-table td.num,
+.summary-table tfoot th.num{
+  text-align: right;
+}
