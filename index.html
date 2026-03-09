@@ -17,7 +17,6 @@
     <button class="hamburger" id="menuBtn" aria-label="Menu" type="button">☰</button>
 
     <nav class="menu" id="menu">
-      <!-- Language dropdown -->
       <div class="lang-wrap">
         <button class="lang-btn" id="langBtn" type="button" aria-haspopup="true" aria-expanded="false">
           🌐 Język/Language
@@ -55,16 +54,13 @@
         <h2 class="section-title" data-i18n="nav.calculator">Kalkulator</h2>
 
         <div class="section-actions">
-          <!-- Clear -->
           <button class="btn" id="clearDataBtn" type="button">
             <span class="btn-ico" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none">
-                <!-- file outline -->
                 <path
                   fill="currentColor"
                   d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z"
                 />
-                <!-- X mark -->
                 <path
                   d="M8.2 10.5L15.9 18.5M16.2 10.5L7.9 18.5"
                   stroke="rgba(10,16,28,0.85)"
@@ -76,13 +72,10 @@
             <span class="btn-text" data-i18n="clear.data">Wyczyść dane</span>
           </button>
 
-          <!-- Import CSV -->
           <button class="btn" id="importCsvBtn" type="button">
             <span class="btn-ico" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none">
-                <!-- file outline -->
                 <path fill="currentColor" d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z"/>
-                <!-- text lines -->
                 <path d="M8 11h8M8 14h8M8 17h5"
                       stroke="rgba(10,16,28,0.85)" stroke-width="1.7" stroke-linecap="round"/>
               </svg>
@@ -90,19 +83,23 @@
             <span class="btn-text" data-i18n="import.csv">Importuj CSV</span>
           </button>
 
-          <!-- Import Excel -->
           <button class="btn" id="importXlsxBtn" type="button">
             <span class="btn-ico" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none">
-                <!-- file outline -->
                 <path fill="currentColor" d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z"/>
-                <!-- grid -->
                 <path d="M10 10v9M13 10v9M8 13h7.2M8 16h7.2"
                       stroke="rgba(10,16,28,0.85)" stroke-width="1.6" stroke-linecap="round"/>
               </svg>
             </span>
             <span class="btn-text" data-i18n="import.excel">Importuj Excel</span>
           </button>
+        </div>
+      </div>
+
+      <div class="card company-settings">
+        <h3 data-i18n="section.companyNames">Nazwy Spółek</h3>
+        <div class="name-grid" id="name-inputs-wrapper">
+          <!-- pola nazw generowane przez JS -->
         </div>
       </div>
 
@@ -137,13 +134,10 @@
       </div>
 
       <div class="export-actions">
-        <!-- Export CSV -->
         <button class="btn" id="exportCsvBtn" type="button">
           <span class="btn-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
-              <!-- file outline -->
               <path fill="currentColor" d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z"/>
-              <!-- text lines -->
               <path d="M8 11h8M8 14h8M8 17h5"
                     stroke="rgba(10,16,28,0.85)" stroke-width="1.7" stroke-linecap="round"/>
             </svg>
@@ -151,13 +145,10 @@
           <span class="btn-text" data-i18n="export.csv">Eksportuj CSV</span>
         </button>
 
-        <!-- Export Excel -->
         <button class="btn" id="exportXlsxBtn" type="button">
           <span class="btn-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
-              <!-- file outline -->
               <path fill="currentColor" d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5z"/>
-              <!-- grid -->
               <path d="M10 10v9M13 10v9M8 13h7.2M8 16h7.2"
                     stroke="rgba(10,16,28,0.85)" stroke-width="1.6" stroke-linecap="round"/>
             </svg>
@@ -169,7 +160,6 @@
   </section>
 </main>
 
-<!-- SZABLON KARTY -->
 <template id="company-template">
   <div class="card company">
     <h3 class="company-title">
@@ -178,8 +168,6 @@
 
     <div class="company-layout">
       <div class="company-left">
-
-        <!-- A -->
         <div class="block">
           <div class="block-head"><span class="js-block-a">A</span></div>
 
@@ -199,7 +187,6 @@
           </div>
         </div>
 
-        <!-- B -->
         <div class="block">
           <div class="block-head"><span class="js-block-b">B</span></div>
 
@@ -218,12 +205,9 @@
             <div class="total-box js-total-b">zł 0,00<br>€ 0,00</div>
           </div>
         </div>
-
       </div>
 
-      <div class="company-bottom">
-        <!-- tu później dorzucimy np. wykres / KPI -->
-      </div>
+      <div class="company-bottom"></div>
     </div>
   </div>
 </template>

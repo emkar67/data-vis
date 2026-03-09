@@ -3,7 +3,7 @@ const COMPANIES = ['a', 'b'];
 const ACCOUNTS = [
   { key: 'current', pl: 'rachunek bieżący', en: 'current account', de: 'Girokonto' },
   { key: 'vat',     pl: 'rachunek VAT',     en: 'VAT account',     de: 'MwSt.-Konto' },
-  { key: 'fx',      pl: 'rachunek walutowy',en: 'FX account',      de: 'Fremdwährungskonto' },
+  { key: 'fx',      pl: 'rachunek walutowy', en: 'FX account',     de: 'Fremdwährungskonto' },
 ];
 
 const CURRENCIES = [
@@ -22,6 +22,7 @@ const I18N = {
     'hero.subtitle': 'Salda rachunków bankowych dla spółek A i B.',
     'hero.note1': 'Edytowalne pola podświetlane są na żółto.',
     'section.summary': 'Podsumowanie',
+    'section.companyNames': 'Nazwy Spółek',
     'summary.company': 'Spółka',
     'summary.balance': 'Suma sald',
     'summary.total': 'Razem',
@@ -35,6 +36,9 @@ const I18N = {
     'import.csv': 'Importuj CSV',
     'import.excel': 'Importuj Excel',
     'card.title': 'Salda Rachunków bankowych',
+    'company.nameLabel': 'Nazwa Spółki {L}',
+    'company.placeholder': 'Spółka {L}',
+    'company.defaultName': 'Spółka {L}',
   },
   en: {
     'nav.calculator': 'Calculator',
@@ -43,6 +47,7 @@ const I18N = {
     'hero.subtitle': 'Bank account balances for companies A and B.',
     'hero.note1': 'Editable fields are highlighted in yellow.',
     'section.summary': 'Summary',
+    'section.companyNames': 'Company Names',
     'summary.company': 'Company',
     'summary.balance': 'Total balances',
     'summary.total': 'Total',
@@ -56,6 +61,9 @@ const I18N = {
     'import.csv': 'Import CSV',
     'import.excel': 'Import Excel',
     'card.title': 'Bank account balances',
+    'company.nameLabel': 'Company {L} name',
+    'company.placeholder': 'Company {L}',
+    'company.defaultName': 'Company {L}',
   },
   de: {
     'nav.calculator': 'Rechner',
@@ -64,6 +72,7 @@ const I18N = {
     'hero.subtitle': 'Kontostände für die Unternehmen A und B.',
     'hero.note1': 'Editierbare Felder sind gelb hervorgehoben.',
     'section.summary': 'Zusammenfassung',
+    'section.companyNames': 'Firmennamen',
     'summary.company': 'Unternehmen',
     'summary.balance': 'Summe der Salden',
     'summary.total': 'Insgesamt',
@@ -77,6 +86,9 @@ const I18N = {
     'import.csv': 'CSV importieren',
     'import.excel': 'Excel importieren',
     'card.title': 'Kontostände',
+    'company.nameLabel': 'Name der Firma {L}',
+    'company.placeholder': 'Firma {L}',
+    'company.defaultName': 'Firma {L}',
   }
 };
 
@@ -88,20 +100,23 @@ let currentLang = 'pl';
    Number formatting
    ========================= */
 const LOCALE_BY_LANG = { pl: 'pl-PL', en: 'en-US', de: 'de-DE' };
-let nf = new Intl.NumberFormat(LOCALE_BY_LANG[currentLang], { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+let nf = new Intl.NumberFormat(LOCALE_BY_LANG[currentLang], {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
 
 function setNumberLocale(lang) {
   const locale = LOCALE_BY_LANG[lang] || 'pl-PL';
-  nf = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  nf = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 }
 
 function formatNum(n) {
   return nf.format(n || 0);
 }
 
-/**
- * Flexible number parser
- */
 function parseNum(v) {
   if (v === null || v === undefined) return 0;
   let s = String(v).trim();
@@ -114,7 +129,9 @@ function parseNum(v) {
   const lastComma = s.lastIndexOf(',');
 
   let decSep = null;
-  if (lastDot !== -1 || lastComma !== -1) decSep = (lastDot > lastComma) ? '.' : ',';
+  if (lastDot !== -1 || lastComma !== -1) {
+    decSep = (lastDot > lastComma) ? '.' : ',';
+  }
 
   if (decSep) {
     const otherSep = decSep === '.' ? ',' : '.';
@@ -141,8 +158,9 @@ function parseNum(v) {
 /* =========================
    i18n helpers
    ========================= */
-function t(key) {
-  return (I18N[currentLang] && I18N[currentLang][key]) || I18N.pl[key] || key;
+function t(key, vars = {}) {
+  let str = (I18N[currentLang] && I18N[currentLang][key]) || I18N.pl[key] || key;
+  return str.replace(/\{(\w+)\}/g, (_, token) => vars[token] ?? `{${token}}`);
 }
 
 function currencyLabel(code) {
@@ -167,17 +185,14 @@ function defaultCurrencyForAcc(accKey) {
 
 function applyTranslations() {
   document.documentElement.setAttribute('lang', currentLang);
+
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     el.textContent = t(key);
   });
 
-  // table headers in template (not data-i18n)
   document.querySelectorAll('.js-th-account').forEach(el => el.textContent = t('table.account'));
   document.querySelectorAll('.js-th-amount').forEach(el => el.textContent = t('table.amount'));
-  document.querySelectorAll('.js-th-currency').forEach(el => el.textContent = t('table.currency'));
-
-  // card title
   document.querySelectorAll('.js-company-title').forEach(el => el.textContent = t('card.title'));
 }
 
@@ -191,6 +206,35 @@ function updateNeedsFill() {
   });
 }
 
+function getCompanyDisplayName(letter) {
+  const L = letter.toUpperCase();
+  return document.getElementById(`name-${letter}`)?.value.trim() || t('company.defaultName', { L });
+}
+
+function updateNameInputsI18n() {
+  COMPANIES.forEach(letter => {
+    const L = letter.toUpperCase();
+
+    const label = document.querySelector(`.js-company-name-label[data-letter="${letter}"]`);
+    if (label) label.textContent = t('company.nameLabel', { L });
+
+    const input = document.getElementById(`name-${letter}`);
+    if (input) input.placeholder = t('company.placeholder', { L });
+  });
+}
+
+function refreshCompanyNamesUI() {
+  const blockA = document.querySelector('.js-block-a');
+  const blockB = document.querySelector('.js-block-b');
+  const summaryA = document.querySelector('.js-summary-name[data-company="a"]');
+  const summaryB = document.querySelector('.js-summary-name[data-company="b"]');
+
+  if (blockA) blockA.textContent = getCompanyDisplayName('a');
+  if (blockB) blockB.textContent = getCompanyDisplayName('b');
+  if (summaryA) summaryA.textContent = getCompanyDisplayName('a');
+  if (summaryB) summaryB.textContent = getCompanyDisplayName('b');
+}
+
 /* =========================
    Render
    ========================= */
@@ -198,24 +242,37 @@ function renderApp() {
   const wrapper = document.getElementById('companies-wrapper');
   const template = document.getElementById('company-template');
   const summaryBody = document.getElementById('summary-body');
+  const nameWrapper = document.getElementById('name-inputs-wrapper');
+
+  if (!wrapper || !template || !summaryBody) return;
 
   wrapper.innerHTML = '';
   summaryBody.innerHTML = '';
+  if (nameWrapper) nameWrapper.innerHTML = '';
 
-  // Summary rows for A and B
   COMPANIES.forEach(letter => {
+    const L = letter.toUpperCase();
+
+    if (nameWrapper) {
+      nameWrapper.innerHTML += `
+        <label class="name-field">
+          <span class="js-company-name-label" data-letter="${letter}">${t('company.nameLabel', { L })}</span>
+          <input class="name-input" id="name-${letter}" type="text" placeholder="${t('company.placeholder', { L })}">
+        </label>
+      `;
+    }
+
     summaryBody.innerHTML += `
       <tr>
-        <td>${letter.toUpperCase()}</td>
-        <td class="num js-summary-${letter}">${formatNum(0)}</td>
-      </tr>`;
+        <td><span class="js-summary-name" data-company="${letter}">${t('company.defaultName', { L })}</span></td>
+        <td class="num js-summary-${letter}">${formatPair({ PLN: 0, EUR: 0 })}</td>
+      </tr>
+    `;
   });
 
-  // One card from template
   const clone = template.content.cloneNode(true);
   wrapper.appendChild(clone);
 
-  // Fill tables A and B
   COMPANIES.forEach(letter => {
     const body = wrapper.querySelector(`.js-bank-body[data-company="${letter}"]`);
     if (!body) return;
@@ -224,36 +281,63 @@ function renderApp() {
 
     for (const acc of ACCOUNTS) {
       const id = `${letter}_${acc.key}`;
-        body.innerHTML += `
-          <tr>
-            <td class="js-acc-label" data-acc="${acc.key}">${accountLabel(acc.key)}</td>
-            <td class="num">
-              <div class="amt-wrap">
-                <input class="cell-input amt-input" id="${id}_amt" data-company="${letter}" data-acc="${acc.key}" value="${formatNum(0)}">
-                <select class="currency-select amt-cur" id="${id}_cur" data-company="${letter}" data-acc="${acc.key}">
-                  ${CURRENCIES.map(c => `
-                    <option value="${c.code}" ${c.code === defaultCurrencyForAcc(acc.key) ? 'selected' : ''}>
-                      ${currencyLabel(c.code)}
-                    </option>
-                  `).join('')}
-                </select>
-              </div>
-            </td>
-          </tr>`;
+      body.innerHTML += `
+        <tr>
+          <td class="js-acc-label" data-acc="${acc.key}">${accountLabel(acc.key)}</td>
+          <td class="num">
+            <div class="amt-wrap">
+              <input class="cell-input amt-input" id="${id}_amt" data-company="${letter}" data-acc="${acc.key}" value="${formatNum(0)}">
+              <select class="currency-select amt-cur" id="${id}_cur" data-company="${letter}" data-acc="${acc.key}">
+                ${CURRENCIES.map(c => `
+                  <option value="${c.code}" ${c.code === defaultCurrencyForAcc(acc.key) ? 'selected' : ''}>
+                    ${currencyLabel(c.code)}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          </td>
+        </tr>
+      `;
     }
   });
 
   applyTranslations();
+  updateNameInputsI18n();
+  refreshCompanyNamesUI();
   updateNeedsFill();
   recalcAll();
 }
 
 /* =========================
    Calculations
-   - sums per company by currency (PLN + EUR)
-   - summary shows PLN+EUR (text)
    ========================= */
+function formatPair(obj) {
+  const nbsp = '\u00A0';
+  const plnPart = `${currencyLabel('PLN')}${nbsp}${formatNum(obj.PLN || 0)}`;
+  const eurPart = `${currencyLabel('EUR')}${nbsp}${formatNum(obj.EUR || 0)}`;
+  return `${plnPart}${nbsp}|${nbsp}${eurPart}`;
+}
+
+function applyPipeRule(el, baseText) {
+  if (!el) return;
+
+  const oneLineText = baseText;
+  const twoLineText = baseText.replace(/\s*\|\s*/g, '\n');
+
+  el.textContent = oneLineText;
+
+  const cs = getComputedStyle(el);
+  const lh = parseFloat(cs.lineHeight) || 16;
+  const wrapped = el.clientHeight > lh * 1.5;
+
+  if (wrapped) {
+    el.innerHTML = twoLineText.replace('\n', '<br>');
+  }
+}
+
 function recalcAll() {
+  refreshCompanyNamesUI();
+
   const totals = {
     a: { PLN: 0, EUR: 0 },
     b: { PLN: 0, EUR: 0 },
@@ -265,91 +349,24 @@ function recalcAll() {
       const curEl = document.getElementById(`${letter}_${acc.key}_cur`);
       if (!amtEl || !curEl) continue;
 
-      const n = parseNum(amtEl.value);
-      const cur = curEl.value || 'PLN';
-      if (!totals[letter][cur]) totals[letter][cur] = 0;
-      totals[letter][cur] += n;
+      const amount = parseNum(amtEl.value);
+      const currency = curEl.value || 'PLN';
+      totals[letter][currency] += amount;
     }
   });
 
-  // helper format: "zł 1 234,00 | € 10,00"
-  function fmtPair(obj) {
-    const nbsp = '\u00A0';
+  const aText = formatPair(totals.a);
+  const bText = formatPair(totals.b);
+  const totalText = formatPair({
+    PLN: totals.a.PLN + totals.b.PLN,
+    EUR: totals.a.EUR + totals.b.EUR,
+  });
 
-    const pln = obj.PLN || 0;
-    const eur = obj.EUR || 0;
-
-    const plnPart = `${currencyLabel('PLN')}${nbsp}${formatNum(pln)}`;
-    const eurPart = `${currencyLabel('EUR')}${nbsp}${formatNum(eur)}`;
-
-    // specjalny separator do późniejszej podmiany
-    return `${plnPart}${nbsp}|${nbsp}${eurPart}`;
-  }
-
-  function applyPipeRule(el, baseText) {
-    if (!el) return;
-
-    const oneLineText = baseText;               // "zł ... | € ..."
-    const twoLineText = baseText.replace(/\s*\|\s*/g, '\n'); // "zł ...\n€ ..."
-
-    // ustaw wersję 1-liniową
-    if ('value' in el) el.value = oneLineText;
-    else el.textContent = oneLineText;
-
-    // sprawdź czy zawinęło / nie mieści się
-    const cs = getComputedStyle(el);
-    const lh = parseFloat(cs.lineHeight) || 16;
-
-    let wrapped = false;
-
-    if ('value' in el) {
-      // input się nie zawija, ale możemy sprawdzić overflow
-      wrapped = el.scrollWidth > el.clientWidth + 1;
-    } else {
-      // normalny tekst (td/th) – wykryj zawinięcie po wysokości
-      wrapped = el.clientHeight > lh * 1.5;
-    }
-
-    if (!wrapped) return;
-
-    // jeśli nie mieści się w 1 wierszu -> usuń "|"
-    if ('value' in el) {
-      // w input nie zrobimy prawdziwego enterka wizualnie,
-      // ale usuwamy pipe żeby nie wisiał samotnie
-      el.value = baseText.replace(/\s*\|\s*/g, '   ');
-    } else {
-      // w tabeli robimy 2 linie
-      el.innerHTML = twoLineText.replace('\n', '<br>');
-    }
-  }
-
-  // totals in card
-  const tA = document.querySelector('.js-total-a');
-  const tB = document.querySelector('.js-total-b');
-
-  if (tA) tA.innerHTML = fmtPair(totals.a).replace(/\s*\|\s*/g, '<br>');
-  if (tB) tB.innerHTML = fmtPair(totals.b).replace(/\s*\|\s*/g, '<br>');
-
-  const sA = document.querySelector('.js-summary-a');
-  const sB = document.querySelector('.js-summary-b');
-
-  const sumTotal = {
-    PLN: (totals.a.PLN || 0) + (totals.b.PLN || 0),
-    EUR: (totals.a.EUR || 0) + (totals.b.EUR || 0),
-  };
-  const sT = document.querySelector('.js-summary-total');
-
-  const aText = fmtPair(totals.a);
-  const bText = fmtPair(totals.b);
-  const totalText = fmtPair(sumTotal);
-
-  applyPipeRule(tA, aText);
-  applyPipeRule(tB, bText);
-
-  applyPipeRule(sA, aText);
-  applyPipeRule(sB, bText);
-
-  applyPipeRule(sT, totalText);
+  applyPipeRule(document.querySelector('.js-total-a'), aText);
+  applyPipeRule(document.querySelector('.js-total-b'), bText);
+  applyPipeRule(document.querySelector('.js-summary-a'), aText);
+  applyPipeRule(document.querySelector('.js-summary-b'), bText);
+  applyPipeRule(document.querySelector('.js-summary-total'), totalText);
 
   updateNeedsFill();
 }
@@ -381,7 +398,6 @@ function collectDataAoA() {
   aoa.push(['lang', currentLang]);
   aoa.push(['exportedAt', new Date().toISOString()]);
   aoa.push([]);
-
   aoa.push(['Company', 'Account', 'Amount', 'Currency']);
 
   for (const letter of COMPANIES) {
@@ -409,7 +425,7 @@ function aoaToCsv(aoa, sep) {
 
 function exportCSV() {
   const aoa = collectDataAoA();
-  const sep = (currentLang === 'en') ? ',' : ';';
+  const sep = currentLang === 'en' ? ',' : ';';
   const csv = '\ufeff' + aoaToCsv(aoa, sep);
   downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `bank_balances_${getDateStamp()}.csv`);
 }
@@ -445,12 +461,20 @@ function parseCsvToAoA(text, sep) {
     const next = s[i + 1];
 
     if (ch === '"') {
-      if (inQuotes && next === '"') { cell += '"'; i++; }
-      else inQuotes = !inQuotes;
+      if (inQuotes && next === '"') {
+        cell += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
       continue;
     }
 
-    if (!inQuotes && ch === sep) { row.push(cell); cell = ''; continue; }
+    if (!inQuotes && ch === sep) {
+      row.push(cell);
+      cell = '';
+      continue;
+    }
 
     if (!inQuotes && (ch === '\n' || ch === '\r')) {
       if (ch === '\r' && next === '\n') i++;
@@ -467,17 +491,19 @@ function parseCsvToAoA(text, sep) {
   row.push(cell);
   rows.push(row);
 
-  while (rows.length && rows[rows.length - 1].every(c => String(c ?? '').trim() === '')) rows.pop();
+  while (rows.length && rows[rows.length - 1].every(c => String(c ?? '').trim() === '')) {
+    rows.pop();
+  }
+
   return rows;
 }
 
 function applyImportFromAoA(aoa) {
   if (!Array.isArray(aoa) || !aoa.length) return;
 
-  // Expect header: Company, Account, Amount, Currency
-  // We accept either key names or localized text, so we just read rows with 4 columns.
   for (const r of aoa) {
     if (!r || r.length < 4) continue;
+
     const comp = String(r[0] ?? '').trim().toLowerCase();
     const accKey = String(r[1] ?? '').trim();
     const amountRaw = r[2];
@@ -504,9 +530,7 @@ function initImportUI() {
 
   const xlsxInput = document.createElement('input');
   xlsxInput.type = 'file';
-  xlsxInput.accept =
-    '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,' +
-    '.xls,application/vnd.ms-excel';
+  xlsxInput.accept = '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xls,application/vnd.ms-excel';
   xlsxInput.style.display = 'none';
 
   document.body.appendChild(csvInput);
@@ -542,7 +566,6 @@ function initImportUI() {
 
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, { type: 'array' });
-
     const sheetName = wb.SheetNames[0];
     const ws = wb.Sheets[sheetName];
     const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
@@ -556,14 +579,17 @@ function initImportUI() {
 const STATE_KEY = 'bank_balances_state_v1';
 
 function getState() {
-  const state = { lang: currentLang, values: {} };
+  const state = { lang: currentLang, names: {}, values: {} };
+
   for (const letter of COMPANIES) {
+    state.names[letter] = document.getElementById(`name-${letter}`)?.value ?? '';
+
     for (const acc of ACCOUNTS) {
       state.values[`${letter}_${acc.key}_amt`] = document.getElementById(`${letter}_${acc.key}_amt`)?.value ?? formatNum(0);
-      state.values[`${letter}_${acc.key}_cur`] =
-      document.getElementById(`${letter}_${acc.key}_cur`)?.value ?? defaultCurrencyForAcc(acc.key);
+      state.values[`${letter}_${acc.key}_cur`] = document.getElementById(`${letter}_${acc.key}_cur`)?.value ?? defaultCurrencyForAcc(acc.key);
     }
   }
+
   return state;
 }
 
@@ -576,16 +602,24 @@ function applyState(state) {
     setNumberLocale(currentLang);
   }
 
+  if (state.names && typeof state.names === 'object') {
+    for (const [letter, name] of Object.entries(state.names)) {
+      const el = document.getElementById(`name-${letter}`);
+      if (el) el.value = String(name ?? '');
+    }
+  }
+
   if (state.values && typeof state.values === 'object') {
     for (const [k, v] of Object.entries(state.values)) {
       const el = document.getElementById(k);
       if (!el) continue;
-      if (el.tagName === 'SELECT') el.value = String(v);
-      else el.value = String(v);
+      el.value = String(v);
     }
   }
 
   applyTranslations();
+  updateNameInputsI18n();
+  refreshCompanyNamesUI();
   recalcAll();
 }
 
@@ -615,6 +649,9 @@ function clearAllData() {
   localStorage.removeItem(STATE_KEY);
 
   for (const letter of COMPANIES) {
+    const nameEl = document.getElementById(`name-${letter}`);
+    if (nameEl) nameEl.value = '';
+
     for (const acc of ACCOUNTS) {
       const amtEl = document.getElementById(`${letter}_${acc.key}_amt`);
       const curEl = document.getElementById(`${letter}_${acc.key}_cur`);
@@ -622,6 +659,7 @@ function clearAllData() {
       if (curEl) curEl.value = defaultCurrencyForAcc(acc.key);
     }
   }
+
   recalcAll();
   scheduleSave();
 }
@@ -642,6 +680,7 @@ function detectBrowserLang() {
       if (SUPPORTED_LANGS.includes(base)) return base;
     }
   } catch (_) {}
+
   return null;
 }
 
@@ -658,12 +697,14 @@ function initLanguageUI() {
 
   function openLang() {
     langDropdown.classList.add('open');
-    langBtn.setAttribute('aria-expanded', 'true');
+    langBtn?.setAttribute('aria-expanded', 'true');
   }
+
   function closeLang() {
     langDropdown.classList.remove('open');
-    langBtn.setAttribute('aria-expanded', 'false');
+    langBtn?.setAttribute('aria-expanded', 'false');
   }
+
   function toggleLang() {
     if (langDropdown.classList.contains('open')) closeLang();
     else openLang();
@@ -676,11 +717,11 @@ function initLanguageUI() {
 
     langOptions.forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
 
-    // Update option labels + account labels
     document.querySelectorAll('.js-acc-label').forEach(td => {
       const key = td.getAttribute('data-acc');
       td.textContent = accountLabel(key);
     });
+
     document.querySelectorAll('.currency-select').forEach(sel => {
       const cur = sel.value;
       sel.innerHTML = CURRENCIES.map(c => `<option value="${c.code}">${currencyLabel(c.code)}</option>`).join('');
@@ -688,22 +729,31 @@ function initLanguageUI() {
     });
 
     applyTranslations();
+    updateNameInputsI18n();
+    refreshCompanyNamesUI();
     recalcAll();
     scheduleSave();
   }
 
   langOptions.forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
 
-  langBtn?.addEventListener('click', (e) => { e.stopPropagation(); toggleLang(); });
+  langBtn?.addEventListener('click', e => {
+    e.stopPropagation();
+    toggleLang();
+  });
+
   langOptions.forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', e => {
       e.stopPropagation();
       setLang(btn.dataset.lang);
       closeLang();
     });
   });
+
   document.addEventListener('click', () => closeLang());
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLang(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLang();
+  });
 }
 
 /* =========================
@@ -722,33 +772,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const yearEl = document.getElementById('year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // mobile menu
   document.getElementById('menuBtn')?.addEventListener('click', () => {
     document.getElementById('menu')?.classList.toggle('open');
   });
 
-  // amount input formatting + autosave
-  document.addEventListener('focusin', (e) => {
+  document.addEventListener('focusin', e => {
     if (e.target.matches('.cell-input:not([readonly])')) {
       const val = parseNum(e.target.value);
       e.target.value = val === 0 ? '' : String(val);
     }
   });
 
-  document.addEventListener('focusout', (e) => {
+  document.addEventListener('focusout', e => {
     if (e.target.matches('.cell-input:not([readonly])')) {
       e.target.value = formatNum(parseNum(e.target.value));
     }
   });
 
-  document.addEventListener('input', (e) => {
-    if (e.target.matches('.cell-input')) {
+  document.addEventListener('input', e => {
+    if (e.target.matches('.cell-input, .name-input')) {
       recalcAll();
       scheduleSave();
     }
   });
 
-  document.addEventListener('change', (e) => {
+  document.addEventListener('change', e => {
     if (e.target.matches('.currency-select')) {
       recalcAll();
       scheduleSave();
