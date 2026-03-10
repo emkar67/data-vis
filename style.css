@@ -538,15 +538,15 @@ body {
 
 @media (max-width: 650px) {
   .acc-name-wrap {
-    width: 100%;
+    width: 50%;
   }
 
   .acc-name-input {
-    width: 100%;
+    width: 50%;
   }
 
   .th-account-wrap {
-    width: 100%;
+    width: 50%;
     grid-template-columns: 1fr;
     justify-items: start;
   }
