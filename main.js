@@ -179,6 +179,35 @@ function accountLabel(accKey) {
   return a.en;
 }
 
+function formatNum(n) {
+  return nf.format(n || 0);
+}
+
+function formatNumEditable(n) {
+  const locale = LOCALE_BY_LANG[currentLang] || 'pl-PL';
+  return new Intl.NumberFormat(locale, {
+    useGrouping: false,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 20
+  }).format(n || 0);
+}
+
+function reformatEditableAmounts() {
+  document.querySelectorAll('.amt-input').forEach(inp => {
+    const value = parseNum(inp.value);
+    const isActive = document.activeElement === inp;
+
+    if (value === 0) {
+      inp.value = isActive ? '' : formatNum(0);
+      return;
+    }
+
+    inp.value = isActive ? formatNumEditable(value) : formatNum(value);
+  });
+
+  updateNeedsFill();
+}
+
 function defaultCurrencyForAcc(accKey) {
   return accKey === 'fx' ? 'EUR' : 'PLN';
 }
@@ -620,6 +649,7 @@ function applyState(state) {
   applyTranslations();
   updateNameInputsI18n();
   refreshCompanyNamesUI();
+  reformatEditableAmounts();
   recalcAll();
 }
 
@@ -731,6 +761,7 @@ function initLanguageUI() {
     applyTranslations();
     updateNameInputsI18n();
     refreshCompanyNamesUI();
+    reformatEditableAmounts();
     recalcAll();
     scheduleSave();
   }
@@ -779,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('focusin', e => {
     if (e.target.matches('.cell-input:not([readonly])')) {
       const val = parseNum(e.target.value);
-      e.target.value = val === 0 ? '' : String(val);
+      e.target.value = val === 0 ? '' : formatNumEditable(val);
     }
   });
 
