@@ -32,6 +32,7 @@ const I18N = {
     'table.currency': 'Waluta',
     'table.addAccount': 'Dodaj rachunek',
     'account.newPlaceholder': 'Nowy rachunek',
+    'account.remove': 'Usuń rachunek',
     'clear.data': 'Wyczyść dane',
     'export.csv': 'Eksportuj CSV',
     'export.excel': 'Eksportuj Excel',
@@ -59,6 +60,7 @@ const I18N = {
     'table.currency': 'Currency',
     'table.addAccount': 'Add account',
     'account.newPlaceholder': 'New account',
+    'account.remove': 'Remove account',
     'clear.data': 'Clear data',
     'export.csv': 'Export CSV',
     'export.excel': 'Export Excel',
@@ -86,6 +88,7 @@ const I18N = {
     'table.currency': 'Währung',
     'table.addAccount': 'Konto hinzufügen',
     'account.newPlaceholder': 'Neues Konto',
+    'account.remove': 'Konto entfernen',
     'clear.data': 'Daten löschen',
     'export.csv': 'CSV exportieren',
     'export.excel': 'Excel exportieren',
@@ -247,6 +250,14 @@ function renderAddIcon() {
   `;
 }
 
+function renderRemoveIcon() {
+  return `
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6 12h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+    </svg>
+  `;
+}
+
 function renderAccountHeader(company) {
   return `
     <div class="th-account-wrap">
@@ -262,6 +273,7 @@ function renderAccountHeader(company) {
 function renderAccountRow(letter, row) {
   const rowId = row.rowId;
   const isDefault = isDefaultRowId(rowId);
+  const canRemove = rowId !== 'current';
   const defaultName = isDefault ? accountLabel(rowId) : '';
   const nameValue = row.name ?? defaultName;
   const amountValue = row.amount ?? formatNum(0);
@@ -272,16 +284,29 @@ function renderAccountRow(letter, row) {
   return `
     <tr data-row-id="${rowId}">
       <td>
-        <input
-          class="cell-input acc-name-input"
-          id="${idBase}_name"
-          data-company="${letter}"
-          data-row-id="${rowId}"
-          type="text"
-          value="${escapeHtmlAttr(nameValue)}"
-          placeholder="${escapeHtmlAttr(placeholder)}"
-          aria-label="${escapeHtmlAttr(isDefault ? defaultName : t('account.newPlaceholder'))}"
-        >
+        <div class="acc-name-wrap">
+          <input
+            class="cell-input acc-name-input"
+            id="${idBase}_name"
+            data-company="${letter}"
+            data-row-id="${rowId}"
+            type="text"
+            value="${escapeHtmlAttr(nameValue)}"
+            placeholder="${escapeHtmlAttr(placeholder)}"
+            aria-label="${escapeHtmlAttr(isDefault ? defaultName : t('account.newPlaceholder'))}"
+          >
+          ${canRemove ? `
+            <button
+              class="acc-remove-btn"
+              type="button"
+              data-company="${letter}"
+              data-row-id="${rowId}"
+              aria-label="${escapeHtmlAttr(t('account.remove'))}"
+            >
+              ${renderRemoveIcon()}
+            </button>
+          ` : ''}
+        </div>
       </td>
       <td class="num">
         <div class="amt-wrap">
@@ -329,6 +354,9 @@ function applyTranslations() {
   document.querySelectorAll('.table-add-btn').forEach(el => el.setAttribute('aria-label', t('table.addAccount')));
   document.querySelectorAll('.js-th-amount').forEach(el => el.textContent = t('table.amount'));
   document.querySelectorAll('.js-company-title').forEach(el => el.textContent = t('card.title'));
+  document.querySelectorAll('.acc-remove-btn').forEach(el => {
+  el.setAttribute('aria-label', t('account.remove'));
+  }); 
 }
 
 /* =========================
@@ -496,6 +524,21 @@ function addAccountRow(letter) {
 
   const newInput = document.getElementById(`${letter}_${row.rowId}_name`);
   newInput?.focus();
+}
+
+function removeAccountRow(letter, rowId) {
+  const body = document.querySelector(`.js-bank-body[data-company="${letter}"]`);
+  if (!body) return;
+
+  const row = Array.from(body.querySelectorAll('tr[data-row-id]'))
+    .find(el => el.dataset.rowId === rowId);
+
+  if (!row) return;
+  if (rowId === 'current') return;
+
+  row.remove();
+  recalcAll();
+  scheduleSave();
 }
 
 /* =========================
@@ -1090,6 +1133,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('click', e => {
+    const removeBtn = e.target.closest('.acc-remove-btn');
+    if (removeBtn) {
+      removeAccountRow(removeBtn.dataset.company, removeBtn.dataset.rowId);
+      return;
+    }
+
     const addBtn = e.target.closest('.table-add-btn');
     if (addBtn) {
       addAccountRow(addBtn.dataset.company);

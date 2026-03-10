@@ -455,8 +455,42 @@ body {
   text-align: right;
 }
 
-.acc-name-input {
+.acc-name-wrap {
+  position: relative;
   width: 50%;
+}
+
+.acc-name-input {
+  width: 100%;
+  padding-right: 38px;
+}
+
+.acc-remove-btn {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 30px;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 0 11px 11px 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.acc-remove-btn:hover {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.acc-remove-btn svg {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .th-account-wrap {
@@ -503,6 +537,10 @@ body {
 }
 
 @media (max-width: 650px) {
+  .acc-name-wrap {
+    width: 100%;
+  }
+
   .acc-name-input {
     width: 100%;
   }
@@ -511,5 +549,22 @@ body {
     width: 100%;
     grid-template-columns: 1fr;
     justify-items: start;
+  }
+}
+
+.table-scroll {
+  width: 100%;
+}
+
+@media (max-width: 650px) {
+  .table-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-scroll .data-table,
+  .table-scroll .total-row {
+    min-width: 560px;
   }
 }
