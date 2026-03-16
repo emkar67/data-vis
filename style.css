@@ -633,10 +633,16 @@ body {
   min-width: 0;
 }
 
-.th-account-wrap,
-.company-head-wrap,
-.bank-head-left {
+.th-account-wrap {
   width: 50%;
+}
+
+.company-head-wrap {
+  width: calc(50% - 37px);
+}
+
+.bank-head-left {
+  width: calc(50% - 31px);
 }
 
 .company-head-row-wrap {
@@ -790,13 +796,20 @@ body {
   }
 
   .acc-name-wrap,
-  .th-account-wrap,
-  .company-head-wrap,
-  .bank-head-left {
+  .th-account-wrap {
     width: 75%;
     min-width: 210px;
   }
 
+  .company-head-wrap {
+    width: calc(75% - 37px);
+    min-width: 210px;
+  }
+
+  .bank-head-left {
+    width: calc(75% - 31px);
+    min-width: 210px;
+  }
   .acc-name-input {
     width: 100%;
   }
