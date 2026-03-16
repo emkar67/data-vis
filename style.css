@@ -794,6 +794,14 @@ body {
     width: 100%;
   }
 
+  .bank-name-input {
+    width: 100%;
+  }
+
+  .bank-head-left {
+    max-width: calc(75% + var(--table-head-btn-width, 0px) + 10px - 31px);
+  }
+
   .table-scroll {
     overflow-x: auto;
     overflow-y: hidden;
