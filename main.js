@@ -19,7 +19,6 @@ const I18N = {
     'hero.subtitle': 'Salda rachunków bankowych dla spółek A i B.',
     'hero.note1': 'Edytowalne pola podświetlane są na żółto.',
     'section.summary': 'Podsumowanie',
-    'section.companyNames': 'Nazwy Spółek',
     'summary.company': 'Spółka',
     'summary.balance': 'Suma sald',
     'summary.total': 'Razem',
@@ -49,7 +48,6 @@ const I18N = {
     'hero.subtitle': 'Bank account balances for companies A and B.',
     'hero.note1': 'Editable fields are highlighted in yellow.',
     'section.summary': 'Summary',
-    'section.companyNames': 'Company Names',
     'summary.company': 'Company',
     'summary.balance': 'Total balances',
     'summary.total': 'Total',
@@ -79,7 +77,6 @@ const I18N = {
     'hero.subtitle': 'Kontostände für die Unternehmen A und B.',
     'hero.note1': 'Editierbare Felder sind gelb hervorgehoben.',
     'section.summary': 'Zusammenfassung',
-    'section.companyNames': 'Firmennamen',
     'summary.company': 'Unternehmen',
     'summary.balance': 'Summe der Salden',
     'summary.total': 'Insgesamt',
@@ -105,7 +102,7 @@ const I18N = {
 };
 
 const LANG_KEY = 'calc_lang';
-const STATE_KEY = 'bank_balances_state_v5';
+const STATE_KEY = 'bank_balances_state_v6';
 const SUPPORTED_LANGS = ['pl', 'en', 'de'];
 const LOCALE_BY_LANG = { pl: 'pl-PL', en: 'en-US', de: 'de-DE' };
 
@@ -242,6 +239,7 @@ function createDefaultAccount(rowId) {
 function createBank() {
   return {
     bankId: makeId('bank'),
+    name: '',
     accounts: ACCOUNTS.map(acc => createDefaultAccount(acc.key)),
   };
 }
@@ -275,6 +273,7 @@ function normalizeBank(raw) {
 
   return {
     bankId: String(raw?.bankId ?? makeId('bank')),
+    name: String(raw?.name ?? ''),
     accounts,
   };
 }
@@ -322,6 +321,11 @@ function getCompanyDisplayName(letter) {
   return raw.trim() || t('company.defaultName', { L });
 }
 
+function getBankDisplayName(bank, index) {
+  const raw = bank?.name ?? '';
+  return raw.trim() || t('bank.label', { N: index + 1 });
+}
+
 function findBank(letter, bankId) {
   return appState.companies[letter].banks.find(bank => bank.bankId === bankId);
 }
@@ -349,21 +353,29 @@ function renderRemoveIcon() {
 }
 
 function renderCompanyHead(letter) {
+  const L = letter.toUpperCase();
+
   return `
-    <div class="company-head-row-wrap">
-      <div class="company-head-wrap">
-        <span class="js-company-head-name" data-company="${letter}">${getCompanyDisplayName(letter)}</span>
-        <button class="table-add-btn add-bank-btn" type="button" data-company="${letter}">
-          <span class="table-add-btn-ico">${renderAddIcon()}</span>
-          <span>${t('company.addBank')}</span>
-        </button>
-      </div>
-      <span class="company-head-spacer" aria-hidden="true"></span>
+    <div class="company-head-wrap">
+      <input
+        class="cell-input inline-name-input company-inline-input"
+        id="company_${letter}_name"
+        data-company="${letter}"
+        type="text"
+        value="${escapeHtmlAttr(appState.companyNames[letter])}"
+        placeholder="${escapeHtmlAttr(t('company.placeholder', { L }))}"
+        aria-label="${escapeHtmlAttr(t('company.nameLabel', { L }))}"
+      >
+      <button class="table-add-btn add-bank-btn" type="button" data-company="${letter}">
+        <span class="table-add-btn-ico">${renderAddIcon()}</span>
+        <span>${t('company.addBank')}</span>
+      </button>
     </div>
   `;
 }
 
 function renderBankHeadRow(letter, bank, index) {
+  const label = getBankDisplayName(bank, index);
   const canRemoveBank = index > 0;
 
   return `
@@ -371,7 +383,16 @@ function renderBankHeadRow(letter, bank, index) {
       <td colspan="2">
         <div class="bank-head-row-wrap">
           <div class="bank-head-left">
-            <span class="bank-label">${t('bank.label', { N: index + 1 })}</span>
+            <input
+              class="cell-input inline-name-input bank-name-input"
+              id="${letter}_${bank.bankId}_bank_name"
+              data-company="${letter}"
+              data-bank-id="${bank.bankId}"
+              type="text"
+              value="${escapeHtmlAttr(bank.name)}"
+              placeholder="${escapeHtmlAttr(label)}"
+              aria-label="${escapeHtmlAttr(label)}"
+            >
             <button class="table-add-btn" type="button" data-company="${letter}" data-bank-id="${bank.bankId}" data-add-account="1">
               <span class="table-add-btn-ico">${renderAddIcon()}</span>
               <span>${t('table.addAccount')}</span>
@@ -492,23 +513,11 @@ function applyStaticTranslations() {
   document.querySelectorAll('.js-company-title').forEach(el => {
     el.textContent = t('card.title');
   });
-
-  COMPANIES.forEach(letter => {
-    const L = letter.toUpperCase();
-    const label = document.querySelector(`.js-company-name-label[data-letter="${letter}"]`);
-    const input = document.getElementById(`name-${letter}`);
-    if (label) label.textContent = t('company.nameLabel', { L });
-    if (input) input.placeholder = t('company.placeholder', { L });
-  });
 }
 
 function syncCompanyDisplayNames() {
   COMPANIES.forEach(letter => {
     const name = getCompanyDisplayName(letter);
-
-    document.querySelectorAll(`.js-company-head-name[data-company="${letter}"]`).forEach(el => {
-      el.textContent = name;
-    });
 
     document.querySelectorAll(`.js-summary-name[data-company="${letter}"]`).forEach(el => {
       el.textContent = name;
@@ -516,46 +525,17 @@ function syncCompanyDisplayNames() {
   });
 }
 
-function syncHeaderActionButtonWidths() {
-  const buttons = Array.from(document.querySelectorAll(
-    '.th-account-wrap > .table-add-btn, .company-head-wrap > .table-add-btn, .bank-head-left > .table-add-btn'
-  ));
-
-  if (!buttons.length) {
-    document.documentElement.style.removeProperty('--table-head-btn-width');
-    return;
-  }
-
-  document.documentElement.style.removeProperty('--table-head-btn-width');
-
-  const maxWidth = Math.ceil(Math.max(...buttons.map(btn => btn.getBoundingClientRect().width)));
-  document.documentElement.style.setProperty('--table-head-btn-width', `${maxWidth}px`);
-}
-
 function renderApp() {
   const wrapper = document.getElementById('companies-wrapper');
   const template = document.getElementById('company-template');
   const summaryBody = document.getElementById('summary-body');
-  const nameWrapper = document.getElementById('name-inputs-wrapper');
 
   if (!wrapper || !template || !summaryBody) return;
 
   wrapper.innerHTML = '';
   summaryBody.innerHTML = '';
-  if (nameWrapper) nameWrapper.innerHTML = '';
 
   COMPANIES.forEach(letter => {
-    const L = letter.toUpperCase();
-
-    if (nameWrapper) {
-      nameWrapper.insertAdjacentHTML('beforeend', `
-        <label class="name-field">
-          <span class="js-company-name-label" data-letter="${letter}">${t('company.nameLabel', { L })}</span>
-          <input class="name-input" id="name-${letter}" type="text" value="${escapeHtmlAttr(appState.companyNames[letter])}" placeholder="${t('company.placeholder', { L })}">
-        </label>
-      `);
-    }
-
     summaryBody.insertAdjacentHTML('beforeend', `
       <tr>
         <td><span class="js-summary-name" data-company="${letter}">${getCompanyDisplayName(letter)}</span></td>
@@ -591,7 +571,6 @@ function renderApp() {
   syncCompanyDisplayNames();
   updateNeedsFill();
   recalcAll();
-  syncHeaderActionButtonWidths();
 
   if (pendingFocusId) {
     requestAnimationFrame(() => {
@@ -672,7 +651,7 @@ function updateNeedsFill() {
     inp.classList.toggle('needs-fill', isZero);
   });
 
-  document.querySelectorAll('.acc-name-input:not([readonly])').forEach(inp => {
+  document.querySelectorAll('.acc-name-input:not([readonly]), .company-inline-input:not([readonly]), .bank-name-input:not([readonly])').forEach(inp => {
     const isEmpty = !inp.value.trim();
     inp.classList.toggle('needs-fill', isEmpty);
   });
@@ -681,7 +660,18 @@ function updateNeedsFill() {
 function addBank(letter) {
   const bank = createBank();
   appState.companies[letter].banks.push(bank);
-  pendingFocusId = `${letter}_${bank.bankId}_current_name`;
+  pendingFocusId = `${letter}_${bank.bankId}_bank_name`;
+  renderApp();
+  scheduleSave();
+}
+
+function removeBank(letter, bankId) {
+  const banks = appState.companies[letter].banks;
+  const index = banks.findIndex(bank => bank.bankId === bankId);
+
+  if (index <= 0) return;
+
+  banks.splice(index, 1);
   renderApp();
   scheduleSave();
 }
@@ -710,18 +700,6 @@ function removeAccount(letter, bankId, rowId) {
   if (!bank) return;
 
   bank.accounts = bank.accounts.filter(acc => acc.rowId !== rowId);
-  renderApp();
-  scheduleSave();
-}
-
-function removeBank(letter, bankId) {
-  const banks = appState?.companies?.[letter]?.banks;
-  if (!Array.isArray(banks) || banks.length <= 1) return;
-
-  const bankIndex = banks.findIndex(bank => bank.bankId === bankId);
-  if (bankIndex <= 0) return;
-
-  banks.splice(bankIndex, 1);
   renderApp();
   scheduleSave();
 }
@@ -780,6 +758,13 @@ function collectDataAoA() {
   aoa.push(['lang', currentLang]);
   aoa.push(['companyName', 'A', appState.companyNames.a]);
   aoa.push(['companyName', 'B', appState.companyNames.b]);
+
+  COMPANIES.forEach(letter => {
+    appState.companies[letter].banks.forEach(bank => {
+      aoa.push(['bankName', letter.toUpperCase(), bank.bankId, bank.name]);
+    });
+  });
+
   aoa.push([]);
   aoa.push(['Company', 'BankId', 'RowId', 'AccountName', 'Amount', 'Currency']);
 
@@ -922,7 +907,7 @@ function applyImportFromAoA(aoa) {
 
   function ensureBank(letter, bankId) {
     if (!bankMap[letter].has(bankId)) {
-      const bank = { bankId, accounts: [] };
+      const bank = { bankId, name: '', accounts: [] };
       bankMap[letter].set(bankId, bank);
       nextState.companies[letter].banks.push(bank);
     }
@@ -937,6 +922,16 @@ function applyImportFromAoA(aoa) {
     if (first === 'companyName' && r.length >= 3) {
       const comp = String(r[1] ?? '').trim().toLowerCase();
       if (COMPANIES.includes(comp)) nextState.companyNames[comp] = String(r[2] ?? '');
+      return;
+    }
+
+    if (first === 'bankName' && r.length >= 4) {
+      const comp = String(r[1] ?? '').trim().toLowerCase();
+      if (!COMPANIES.includes(comp)) return;
+
+      const bankId = String(r[2] ?? '').trim() || makeId('bank');
+      const bankName = String(r[3] ?? '');
+      ensureBank(comp, bankId).name = bankName;
       return;
     }
 
@@ -997,6 +992,7 @@ function applyImportFromAoA(aoa) {
 
   appState = normalizeState(nextState);
   relabelDefaultAccountNames();
+  reformatStoredAmounts();
   renderApp();
   scheduleSave();
 }
@@ -1164,9 +1160,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const bankRemoveBtn = e.target.closest('.bank-remove-btn');
-    if (bankRemoveBtn) {
-      removeBank(bankRemoveBtn.dataset.company, bankRemoveBtn.dataset.bankId);
+    const removeBankBtn = e.target.closest('.bank-remove-btn');
+    if (removeBankBtn) {
+      removeBank(removeBankBtn.dataset.company, removeBankBtn.dataset.bankId);
       return;
     }
 
@@ -1201,13 +1197,22 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('input', e => {
-    if (e.target.matches('.name-input')) {
-      const letter = e.target.id.replace('name-', '');
+    if (e.target.matches('.company-inline-input')) {
+      const letter = e.target.dataset.company;
       if (COMPANIES.includes(letter)) {
         appState.companyNames[letter] = e.target.value;
         syncCompanyDisplayNames();
+        updateNeedsFill();
         scheduleSave();
       }
+      return;
+    }
+
+    if (e.target.matches('.bank-name-input')) {
+      const bank = findBank(e.target.dataset.company, e.target.dataset.bankId);
+      if (bank) bank.name = e.target.value;
+      updateNeedsFill();
+      scheduleSave();
       return;
     }
 
