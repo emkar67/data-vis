@@ -624,14 +624,39 @@ body {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  width: 50%;
   min-width: 0;
+}
+
+.th-account-wrap {
+  width: 50%;
+}
+
+.company-head-wrap {
+  width: calc(50% + var(--table-head-btn-width, 0px) + 10px - 31px);
+}
+
+.bank-head-left {
+  width: calc(50% + var(--table-head-btn-width, 0px) + 10px - 31px);
+}
+
+.company-head-row-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px 30px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.company-head-spacer {
+  display: block;
 }
 
 .th-account-wrap > .table-add-btn,
 .company-head-wrap > .table-add-btn,
 .bank-head-left > .table-add-btn {
+  width: var(--table-head-btn-width, auto);
   justify-self: end;
+  justify-content: center;
 }
 
 .th-account-wrap > span,
@@ -752,13 +777,17 @@ body {
   }
 
   .company-head-wrap {
-    width: calc(75% - 37px);
-    min-width: 210px;
+    width: calc(75% + var(--table-head-btn-width, 0px) + 10px - 31px);
+    min-width: calc(210px + var(--table-head-btn-width, 0px) + 10px - 31px);
   }
 
   .bank-head-left {
-    width: calc(75% - 31px);
-    min-width: 210px;
+    width: calc(75% + var(--table-head-btn-width, 0px) + 10px);
+    min-width: calc(210px + var(--table-head-btn-width, 0px) + 10px - 31px);
+  }
+
+  .company-head-row-wrap {
+    min-width: 480px;
   }
 
   .acc-name-input {

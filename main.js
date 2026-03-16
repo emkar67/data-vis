@@ -102,7 +102,7 @@ const I18N = {
 };
 
 const LANG_KEY = 'calc_lang';
-const STATE_KEY = 'bank_balances_state_v6';
+const STATE_KEY = 'bank_balances_state_v7';
 const SUPPORTED_LANGS = ['pl', 'en', 'de'];
 const LOCALE_BY_LANG = { pl: 'pl-PL', en: 'en-US', de: 'de-DE' };
 
@@ -356,20 +356,24 @@ function renderCompanyHead(letter) {
   const L = letter.toUpperCase();
 
   return `
-    <div class="company-head-wrap">
-      <input
-        class="cell-input inline-name-input company-inline-input"
-        id="company_${letter}_name"
-        data-company="${letter}"
-        type="text"
-        value="${escapeHtmlAttr(appState.companyNames[letter])}"
-        placeholder="${escapeHtmlAttr(t('company.placeholder', { L }))}"
-        aria-label="${escapeHtmlAttr(t('company.nameLabel', { L }))}"
-      >
-      <button class="table-add-btn add-bank-btn" type="button" data-company="${letter}">
-        <span class="table-add-btn-ico">${renderAddIcon()}</span>
-        <span>${t('company.addBank')}</span>
-      </button>
+    <div class="company-head-row-wrap">
+      <div class="company-head-wrap">
+        <input
+          class="cell-input inline-name-input company-inline-input"
+          id="company_${letter}_name"
+          data-company="${letter}"
+          type="text"
+          value="${escapeHtmlAttr(appState.companyNames[letter])}"
+          placeholder="${escapeHtmlAttr(t('company.placeholder', { L }))}"
+          aria-label="${escapeHtmlAttr(t('company.nameLabel', { L }))}"
+        >
+        <button class="table-add-btn add-bank-btn" type="button" data-company="${letter}">
+          <span class="table-add-btn-ico">${renderAddIcon()}</span>
+          <span>${t('company.addBank')}</span>
+        </button>
+      </div>
+      <span class="company-head-spacer" aria-hidden="true"></span>
+      <span class="company-head-spacer" aria-hidden="true"></span>
     </div>
   `;
 }
@@ -525,6 +529,22 @@ function syncCompanyDisplayNames() {
   });
 }
 
+function syncHeaderActionButtonWidths() {
+  const buttons = Array.from(document.querySelectorAll(
+    '.company-head-wrap > .table-add-btn, .bank-head-left > .table-add-btn'
+  ));
+
+  document.documentElement.style.removeProperty('--table-head-btn-width');
+
+  if (!buttons.length) return;
+
+  const maxWidth = Math.ceil(
+    Math.max(...buttons.map(btn => btn.getBoundingClientRect().width))
+  );
+
+  document.documentElement.style.setProperty('--table-head-btn-width', `${maxWidth}px`);
+}
+
 function renderApp() {
   const wrapper = document.getElementById('companies-wrapper');
   const template = document.getElementById('company-template');
@@ -572,13 +592,15 @@ function renderApp() {
   updateNeedsFill();
   recalcAll();
 
-  if (pendingFocusId) {
-    requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    syncHeaderActionButtonWidths();
+
+    if (pendingFocusId) {
       const el = document.getElementById(pendingFocusId);
       el?.focus();
       pendingFocusId = null;
-    });
-  }
+    }
+  });
 }
 
 function formatPair(obj) {
@@ -1255,4 +1277,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initImportUI();
   initLanguageUI();
+
+  window.addEventListener('resize', () => {
+    requestAnimationFrame(syncHeaderActionButtonWidths);
+  });
 });
