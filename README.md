@@ -9,3 +9,4 @@ Roadmap:
 
 - separate tables for expected inflows, outflows, and internal invoicing
 - table generation (without edit mode) as a png/jpeg or html code
+- company configs
