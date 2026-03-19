@@ -648,6 +648,32 @@ function syncCompanyDisplayNames() {
   });
 }
 
+async function resetCache() {
+  try {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+
+    localStorage.clear();
+    sessionStorage.clear();
+
+    if ('caches' in window) {
+      const cacheKeys = await caches.keys();
+      await Promise.all(cacheKeys.map(key => caches.delete(key)));
+    }
+
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(reg => reg.unregister()));
+    }
+  } catch (e) {
+    console.warn('Nie udało się zresetować cache:', e);
+  } finally {
+    window.location.reload();
+  }
+}
+
 function syncHeaderActionButtonWidths() {
   const buttons = Array.from(document.querySelectorAll(
     '.company-head-wrap > .table-add-btn, .bank-head-left > .table-add-btn'
@@ -1300,6 +1326,10 @@ document.addEventListener('DOMContentLoaded', () => {
   renderApp();
 
   document.getElementById('clearDataBtn')?.addEventListener('click', clearAllData);
+  document.getElementById('clearCacheBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    resetCache();
+  });
   document.getElementById('exportCsvBtn')?.addEventListener('click', exportCSV);
   document.getElementById('exportXlsxBtn')?.addEventListener('click', exportExcel);
 
