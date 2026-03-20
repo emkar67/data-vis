@@ -9,8 +9,10 @@ const ACCOUNTS = [
 ];
 
 const CURRENCIES = [
-  { code: 'PLN', label_pl: 'zł', label_en: 'PLN', label_de: 'PLN' },
-  { code: 'EUR', label_pl: '€', label_en: '€', label_de: '€' },
+  { code: 'PLN', label_pl: 'zł', label_en: 'PLN', label_de: 'zł' },
+  { code: 'EUR', label_pl: '€', label_en: 'EUR', label_de: '€' },
+  { code: 'USD', label_pl: '$', label_en: 'USD', label_de: '$' },
+  { code: 'GBP', label_pl: '£', label_en: 'GBP', label_de: '£' },
 ];
 
 const I18N = {
@@ -188,6 +190,11 @@ function parseNum(v) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function normalizeCurrency(rawCurrency, fallback = 'PLN') {
+  const code = String(rawCurrency ?? fallback).trim().toUpperCase();
+  return CURRENCIES.some(c => c.code === code) ? code : fallback;
+}
+
 function currencyLabel(code) {
   const c = CURRENCIES.find(x => x.code === code);
   if (!c) return code;
@@ -205,7 +212,13 @@ function accountLabel(accKey) {
 }
 
 function defaultCurrencyForAcc(accKey) {
-  return accKey === 'fx' ? 'EUR' : 'PLN';
+  const defaultsByLang = {
+    pl: { current: 'PLN', vat: 'PLN', fx: 'EUR' },
+    en: { current: 'USD', vat: 'USD', fx: 'GBP' },
+    de: { current: 'EUR', vat: 'EUR', fx: 'USD' },
+  };
+
+  return defaultsByLang[currentLang]?.[accKey] || defaultsByLang.pl[accKey] || 'PLN';
 }
 
 function isDefaultRowId(rowId) {
@@ -247,6 +260,42 @@ function companyTokenFromIndex(index) {
   return token;
 }
 
+function createEmptyTotals() {
+  return Object.fromEntries(CURRENCIES.map(c => [c.code, 0]));
+}
+
+function orderCurrencyCodes(codes) {
+  const set = codes instanceof Set ? codes : new Set(codes);
+  return CURRENCIES.map(c => c.code).filter(code => set.has(code));
+}
+
+function getVisibleCurrencyCodesFromAccounts(accounts = []) {
+  const seen = new Set();
+
+  accounts.forEach(acc => {
+    const code = normalizeCurrency(acc?.currency, '');
+    if (code) seen.add(code);
+  });
+
+  return orderCurrencyCodes(seen);
+}
+
+function getVisibleCurrencyCodesForBank(bank) {
+  return getVisibleCurrencyCodesFromAccounts(bank?.accounts || []);
+}
+
+function getVisibleCurrencyCodesForCompany(company) {
+  const accounts = (company?.banks || []).flatMap(bank => bank.accounts || []);
+  return getVisibleCurrencyCodesFromAccounts(accounts);
+}
+
+function getVisibleCurrencyCodesForAllCompanies() {
+  const accounts = getCompanies().flatMap(company =>
+    (company.banks || []).flatMap(bank => bank.accounts || [])
+  );
+  return getVisibleCurrencyCodesFromAccounts(accounts);
+}
+
 function createDefaultAccount(rowId) {
   return {
     rowId,
@@ -286,7 +335,10 @@ function normalizeAccount(raw) {
     rowId,
     name: String(raw?.name ?? (isDefault ? accountLabel(rowId) : '')),
     amount: formatNum(parseNum(raw?.amount)),
-    currency: String(raw?.currency ?? (isDefault ? defaultCurrencyForAcc(rowId) : 'PLN')).toUpperCase() === 'EUR' ? 'EUR' : 'PLN',
+    currency: normalizeCurrency(
+      raw?.currency,
+      isDefault ? defaultCurrencyForAcc(rowId) : 'PLN'
+    ),
   };
 }
 
@@ -370,6 +422,18 @@ function relabelDefaultAccountNames() {
       bank.accounts.forEach(acc => {
         if (isDefaultAccountName(acc.rowId, acc.name)) {
           acc.name = accountLabel(acc.rowId);
+        }
+      });
+    });
+  });
+}
+
+function applyDefaultCurrenciesForCurrentLanguage() {
+  getCompanies().forEach(company => {
+    company.banks.forEach(bank => {
+      bank.accounts.forEach(acc => {
+        if (isDefaultRowId(acc.rowId)) {
+          acc.currency = defaultCurrencyForAcc(acc.rowId);
         }
       });
     });
@@ -567,12 +631,15 @@ function renderAccountRow(companyId, bankId, acc) {
 }
 
 function renderBankSubtotalRow(companyId, bankId) {
+  const bank = findBank(companyId, bankId);
+  const visibleCodes = getVisibleCurrencyCodesForBank(bank);
+
   return `
     <tr class="bank-subtotal-row">
       <td>${t('label.total')}</td>
       <td class="num">
         <div class="total-box js-bank-total" data-company-id="${companyId}" data-bank-id="${bankId}">
-          ${formatPair({ PLN: 0, EUR: 0 })}
+          ${formatPair(createEmptyTotals(), visibleCodes)}
         </div>
       </td>
     </tr>
@@ -593,6 +660,8 @@ function renderCompanyBankRows(companyId) {
 }
 
 function renderCompanySection(company, index) {
+  const companyVisibleCodes = getVisibleCurrencyCodesForCompany(company);
+
   return `
     <div class="block company-section" data-company-id="${company.companyId}">
       <div class="block-head">
@@ -614,7 +683,7 @@ function renderCompanySection(company, index) {
 
         <div class="total-row grand-total-row">
           <span class="total-label">${t('label.grandTotal')}</span>
-          <div class="total-box js-company-total" data-company-id="${company.companyId}">${formatPair({ PLN: 0, EUR: 0 })}</div>
+          <div class="total-box js-company-total" data-company-id="${company.companyId}">${formatPair(createEmptyTotals(), companyVisibleCodes)}</div>
         </div>
       </div>
     </div>
@@ -709,10 +778,12 @@ function renderApp() {
   if (!companiesList) return;
 
   getCompanies().forEach((company, index) => {
+    const companyVisibleCodes = getVisibleCurrencyCodesForCompany(company);
+
     summaryBody.insertAdjacentHTML('beforeend', `
       <tr>
         <td><span class="js-summary-name" data-company-id="${company.companyId}">${getCompanyDisplayName(company, index)}</span></td>
-        <td class="num js-summary-company" data-company-id="${company.companyId}">${formatPair({ PLN: 0, EUR: 0 })}</td>
+        <td class="num js-summary-company" data-company-id="${company.companyId}">${formatPair(createEmptyTotals(), companyVisibleCodes)}</td>
       </tr>
     `);
 
@@ -735,11 +806,13 @@ function renderApp() {
   });
 }
 
-function formatPair(obj) {
+function formatPair(obj, visibleCodes = CURRENCIES.map(c => c.code)) {
   const nbsp = '\u00A0';
-  const plnPart = `${currencyLabel('PLN')}${nbsp}${formatNum(obj.PLN || 0)}`;
-  const eurPart = `${currencyLabel('EUR')}${nbsp}${formatNum(obj.EUR || 0)}`;
-  return `${plnPart}${nbsp}|${nbsp}${eurPart}`;
+  const codes = visibleCodes?.length ? visibleCodes : ['PLN'];
+
+  return codes
+    .map(code => `${currencyLabel(code)}${nbsp}${formatNum(obj[code] || 0)}`)
+    .join(`${nbsp}|${nbsp}`);
 }
 
 function applyPipeRule(el, baseText) {
@@ -762,32 +835,45 @@ function applyPipeRule(el, baseText) {
 function recalcAll() {
   syncCompanyDisplayNames();
 
-  const grandTotal = { PLN: 0, EUR: 0 };
+  const grandTotal = createEmptyTotals();
 
   getCompanies().forEach(company => {
-    const companyTotal = { PLN: 0, EUR: 0 };
+    const companyTotal = createEmptyTotals();
 
     company.banks.forEach(bank => {
-      const bankTotal = { PLN: 0, EUR: 0 };
+      const bankTotal = createEmptyTotals();
 
       bank.accounts.forEach(acc => {
         const amount = parseNum(acc.amount);
-        const currency = acc.currency === 'EUR' ? 'EUR' : 'PLN';
+        const currency = normalizeCurrency(acc.currency, 'PLN');
         bankTotal[currency] += amount;
         companyTotal[currency] += amount;
         grandTotal[currency] += amount;
       });
 
+      const bankVisibleCodes = getVisibleCurrencyCodesForBank(bank);
       const bankTotalEl = document.querySelector(`.js-bank-total[data-company-id="${company.companyId}"][data-bank-id="${bank.bankId}"]`);
-      if (bankTotalEl) bankTotalEl.textContent = formatPair(bankTotal);
+      if (bankTotalEl) {
+        bankTotalEl.textContent = formatPair(bankTotal, bankVisibleCodes);
+      }
     });
 
-    const companyText = formatPair(companyTotal);
-    applyPipeRule(document.querySelector(`.js-company-total[data-company-id="${company.companyId}"]`), companyText);
-    applyPipeRule(document.querySelector(`.js-summary-company[data-company-id="${company.companyId}"]`), companyText);
+    const companyVisibleCodes = getVisibleCurrencyCodesForCompany(company);
+    const companyText = formatPair(companyTotal, companyVisibleCodes);
+
+    applyPipeRule(
+      document.querySelector(`.js-company-total[data-company-id="${company.companyId}"]`),
+      companyText
+    );
+
+    applyPipeRule(
+      document.querySelector(`.js-summary-company[data-company-id="${company.companyId}"]`),
+      companyText
+    );
   });
 
-  applyPipeRule(document.querySelector('.js-summary-total'), formatPair(grandTotal));
+  const grandVisibleCodes = getVisibleCurrencyCodesForAllCompanies();
+  applyPipeRule(document.querySelector('.js-summary-total'), formatPair(grandTotal, grandVisibleCodes));
   updateNeedsFill();
 }
 
@@ -854,7 +940,7 @@ function addAccount(companyId, bankId) {
     rowId,
     name: '',
     amount: formatNum(0),
-    currency: 'PLN',
+    currency: defaultCurrencyForAcc('current'),
   });
 
   pendingFocusId = `${companyId}_${bankId}_${rowId}_name`;
@@ -1123,7 +1209,7 @@ function applyImportFromAoA(aoa) {
       const rowId = String(r[2] ?? '').trim() || makeId('acc');
       const name = String(r[3] ?? '');
       const amount = formatNum(parseNum(r[4]));
-      const currency = String(r[5] ?? 'PLN').trim().toUpperCase() === 'EUR' ? 'EUR' : 'PLN';
+      const currency = normalizeCurrency(r[5], 'PLN');
 
       ensureBank(companyId, bankId).accounts.push({ rowId, name, amount, currency });
       return;
@@ -1134,7 +1220,7 @@ function applyImportFromAoA(aoa) {
       const rowId = String(r[1] ?? '').trim() || makeId('acc');
       const name = String(r[2] ?? '');
       const amount = formatNum(parseNum(r[3]));
-      const currency = String(r[4] ?? 'PLN').trim().toUpperCase() === 'EUR' ? 'EUR' : 'PLN';
+      const currency = normalizeCurrency(r[4], 'PLN');
 
       ensureBank(companyId, bankId).accounts.push({ rowId, name, amount, currency });
       return;
@@ -1146,7 +1232,7 @@ function applyImportFromAoA(aoa) {
       if (!isDefaultRowId(rowId)) return;
 
       const amount = formatNum(parseNum(r[2]));
-      const currency = String(r[3] ?? 'PLN').trim().toUpperCase() === 'EUR' ? 'EUR' : 'PLN';
+      const currency = normalizeCurrency(r[3], defaultCurrencyForAcc(rowId));
 
       ensureBank(companyId, bankId).accounts.push({
         rowId,
@@ -1265,6 +1351,7 @@ function setLang(lang) {
   localStorage.setItem(LANG_KEY, currentLang);
   setNumberLocale(currentLang);
 
+  applyDefaultCurrenciesForCurrentLanguage();
   reformatStoredAmounts();
   relabelDefaultAccountNames();
   renderApp();
