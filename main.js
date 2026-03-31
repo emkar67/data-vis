@@ -1073,12 +1073,13 @@ function renderExpectedCompanyBlock(company, index, type) {
   const actorKey = type === 'outflow' ? 'expected.outflow.actor' : 'expected.inflow.actor';
   const entries = getExpectedEntries(company, type);
   const totals = calcExpectedTotals(entries);
+  const hasEntries = entries.length > 0;
   const addButton = renderSectionAddRowButton(
     `data-company-id="${company.companyId}" data-add-expected-row="${type}"`
   );
 
   return `
-    <div class="block section-company-block" data-company-id="${company.companyId}" data-section-type="${type}">
+    <div class="block section-company-block ${hasEntries ? '' : 'section-company-block--compact'}" data-company-id="${company.companyId}" data-section-type="${type}">
       <div class="block-head">
         <div class="expected-company-head-wrap">
           <span class="expected-company-title js-company-label" data-company-id="${company.companyId}">
@@ -1088,7 +1089,7 @@ function renderExpectedCompanyBlock(company, index, type) {
         </div>
       </div>
 
-      ${entries.length ? `
+      ${hasEntries ? `
         <div class="table-scroll">
           <table class="data-table expected-table">
             <thead>
@@ -1117,9 +1118,7 @@ function renderExpectedCompanyBlock(company, index, type) {
             </tfoot>
           </table>
         </div>
-      ` : `
-        <div class="expected-empty-body" aria-hidden="true"></div>
-      `}
+      ` : ''}
     </div>
   `;
 }
@@ -1157,13 +1156,14 @@ function renderInternalBillingRow(companyId, entry) {
 function renderInternalBillingCompanyBlock(company, index) {
   const entries = getInternalInvoicesForCompany(company.companyId);
   const totals = calcInternalTotals(entries);
+  const hasEntries = entries.length > 0;
   const addButton = renderSectionAddRowButton(
     `data-company-id="${company.companyId}" data-add-internal-row="1"`,
     'internal.addRow'
   );
 
   return `
-    <div class="block section-company-block" data-company-id="${company.companyId}" data-section-type="internal">
+    <div class="block section-company-block ${hasEntries ? '' : 'section-company-block--compact'}" data-company-id="${company.companyId}" data-section-type="internal">
       <div class="block-head">
         <div class="expected-company-head-wrap">
           <span class="expected-company-title js-company-label" data-company-id="${company.companyId}">
@@ -1173,7 +1173,7 @@ function renderInternalBillingCompanyBlock(company, index) {
         </div>
       </div>
 
-      ${entries.length ? `
+      ${hasEntries ? `
         <div class="table-scroll">
           <table class="data-table expected-table internal-billing-table">
             <thead>
@@ -1202,9 +1202,7 @@ function renderInternalBillingCompanyBlock(company, index) {
             </tfoot>
           </table>
         </div>
-      ` : `
-        <div class="expected-empty-body" aria-hidden="true"></div>
-      `}
+      ` : ''}
     </div>
   `;
 }

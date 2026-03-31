@@ -256,6 +256,10 @@ body {
   overflow: hidden;
 }
 
+.section-company-block--compact .block-head {
+  border-bottom: 0;
+}
+
 .expected-company-head-wrap {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -289,6 +293,10 @@ body {
 
 .expected-empty-body {
   min-height: 112px;
+}
+
+.section-company-block--compact .expected-company-head-wrap {
+  min-height: 34px;
 }
 
 /* =========================
@@ -1005,4 +1013,15 @@ body {
 .footer a:focus-visible {
   color: #ffffff;
   text-decoration: underline;
+}
+
+/* tylko oczekiwane wpływy / wydatki */
+#expected-inflows-wrapper .expected-table td.num,
+#expected-outflows-wrapper .expected-table td.num {
+  text-align: left;
+}
+
+#expected-inflows-wrapper .expected-table td.num input,
+#expected-outflows-wrapper .expected-table td.num input {
+  text-align: left;
 }
