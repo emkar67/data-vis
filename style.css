@@ -809,7 +809,7 @@ body {
   padding-top: 14px;
 }
 
-.expected-table input {
+.expected-table input:not([type="checkbox"]) {
   min-width: 100px;
 }
 
@@ -836,7 +836,7 @@ body {
   width: 112px;
 }
 
-.expected-section-grid .expected-table input {
+.expected-section-grid .expected-table input:not([type="checkbox"]) {
   min-width: 88px;
   padding: 7px 10px;
 }
@@ -1017,28 +1017,6 @@ body {
 
 /* tylko oczekiwane wpływy / wydatki */
 #expected-inflows-wrapper .expected-table td.num,
-#expected-outflows-wrapper .expected-table td.num {
-  text-align: left;
-}
-
-#expected-inflows-wrapper .expected-table td.num input,
-#expected-outflows-wrapper .expected-table td.num input {
-  text-align: left;
-}
-
-/* szersze tylko pole dostawca / odbiorca */
-#expected-inflows-wrapper .expected-table input[data-expected-field="counterparty"],
-#expected-outflows-wrapper .expected-table input[data-expected-field="counterparty"] {
-  min-width: 220px;
-}
-
-/* lekko krótsze pole nr faktury */
-#expected-inflows-wrapper .expected-table input[data-expected-field="invoiceNo"],
-#expected-outflows-wrapper .expected-table input[data-expected-field="invoiceNo"] {
-  min-width: 105px;
-}
-
-#expected-inflows-wrapper .expected-table td.num,
 #expected-outflows-wrapper .expected-table td.num,
 #expected-inflows-wrapper .expected-table td.num input,
 #expected-outflows-wrapper .expected-table td.num input {
@@ -1065,13 +1043,86 @@ body {
   width: 42px;
 }
 
+/* internal invoicing */
+.internal-master-toggle {
+  padding: 10px 12px 0;
+}
+
+.internal-master-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.internal-master-checkbox {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  margin: 0;
+  flex: 0 0 16px;
+  display: inline-grid;
+  place-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.internal-master-checkbox::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: scale(0);
+  transition: transform 0.12s ease-in-out;
+}
+
+.internal-master-checkbox:checked::before {
+  transform: scale(1);
+}
+
+.internal-master-checkbox:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(206, 121, 188, 0.22);
+}
+
+.internal-include-checkbox {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  margin: 0;
+  display: inline-block;
+  vertical-align: middle;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.internal-billing-table th.internal-check-col,
+.internal-billing-table td.internal-check-col {
+  width: 42px;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 0;
+}
+
 #internal-billing-wrapper .internal-billing-table td.num,
 #internal-billing-wrapper .internal-billing-table td.num input {
   text-align: left;
 }
 
+#internal-billing-wrapper .internal-col-check {
+  width: 42px;
+}
+
 #internal-billing-wrapper .internal-col-company {
-  width: 240px;
+  width: 198px;
 }
 
 #internal-billing-wrapper .internal-col-invoice {
@@ -1086,3 +1137,6 @@ body {
   width: 42px;
 }
 
+#internal-billing-wrapper .internal-company-select {
+  min-width: 150px;
+}

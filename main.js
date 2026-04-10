@@ -75,6 +75,7 @@ const I18N = {
     'internal.addRow': 'Dodaj pozycję',
     'internal.removeRow': 'Usuń pozycję',
     'internal.companyPlaceholder': 'Wybierz spółkę',
+    'internal.includeInExpected': 'uwzględnij w oczekiwanych wpływach/wydatkach',
   },
   en: {
     'nav.calculator': 'Data',
@@ -135,6 +136,7 @@ const I18N = {
     'internal.addRow': 'Add row',
     'internal.removeRow': 'Remove row',
     'internal.companyPlaceholder': 'Choose company',
+    'internal.includeInExpected': 'include in expected inflows/outflows',
   },
   de: {
     'nav.calculator': 'Daten',
@@ -195,6 +197,7 @@ const I18N = {
     'internal.addRow': 'Position hinzufügen',
     'internal.removeRow': 'Position entfernen',
     'internal.companyPlaceholder': 'Gesellschaft wählen',
+    'internal.includeInExpected': 'in erwarteten Ein-/Auszahlungen berücksichtigen',
   }
 };
 
@@ -275,6 +278,18 @@ function parseNum(v) {
 
   const n = parseFloat(s);
   return Number.isFinite(n) ? n : 0;
+}
+
+function parseBool(v, fallback = false) {
+  if (typeof v === 'boolean') return v;
+  if (v === null || v === undefined || v === '') return fallback;
+
+  const s = String(v).trim().toLowerCase();
+
+  if (['1', 'true', 'yes', 'y', 'tak'].includes(s)) return true;
+  if (['0', 'false', 'no', 'n', 'nie'].includes(s)) return false;
+
+  return fallback;
 }
 
 function hasManualValue(v) {
@@ -479,6 +494,7 @@ function createInternalInvoiceEntry(companyId = '') {
     entryId: String(makeId('internal')),
     fromCompanyId,
     toCompanyId,
+    includeInExpected: false,
     invoiceNo: '',
     net: formatNum(0),
     vat: formatNum(0),
@@ -499,6 +515,7 @@ function normalizeInternalInvoiceEntry(raw) {
     entryId: String(raw?.entryId ?? makeId('internal')),
     fromCompanyId: String(raw?.fromCompanyId ?? raw?.sellerCompanyId ?? ''),
     toCompanyId: String(raw?.toCompanyId ?? raw?.buyerCompanyId ?? ''),
+    includeInExpected: parseBool(raw?.includeInExpected, false),
     invoiceNo: String(raw?.invoiceNo ?? ''),
     net: formatNum(parseNum(raw?.net)),
     vat: formatNum(parseNum(raw?.vat)),
@@ -1141,6 +1158,16 @@ function renderInternalBillingRow(companyId, entry) {
 
   return `
     <tr>
+      <td class="internal-check-col">
+        <input
+          class="internal-include-checkbox"
+          id="${idBase}_include"
+          data-entry-id="${entry.entryId}"
+          type="checkbox"
+          ${entry.includeInExpected ? 'checked' : ''}
+          aria-label="${escapeHtmlAttr(t('internal.includeInExpected'))}"
+        >
+      </td>
       <td>
         <select class="cell-input internal-company-select" id="${idBase}_to" data-entry-id="${entry.entryId}" data-internal-field="toCompanyId" aria-label="${escapeHtmlAttr(t('internal.toCompany'))}">
           ${getCompanySelectOptions(entry.toCompanyId, companyId)}
@@ -1166,6 +1193,7 @@ function renderInternalBillingCompanyBlock(company, index) {
   const entries = getInternalInvoicesForCompany(company.companyId);
   const totals = calcInternalTotals(entries);
   const hasEntries = entries.length > 0;
+  const allIncluded = hasEntries && entries.every(entry => entry.includeInExpected);
   const addButton = renderSectionAddRowButton(
     `data-company-id="${company.companyId}" data-add-internal-row="1"`,
     'internal.addRow'
@@ -1183,9 +1211,23 @@ function renderInternalBillingCompanyBlock(company, index) {
       </div>
 
       ${hasEntries ? `
+        <div class="internal-master-toggle">
+          <label class="internal-master-toggle-label">
+            <input
+              class="internal-master-checkbox"
+              type="checkbox"
+              data-company-id="${company.companyId}"
+              ${allIncluded ? 'checked' : ''}
+              aria-label="${escapeHtmlAttr(t('internal.includeInExpected'))}"
+            >
+            <span>${t('internal.includeInExpected')}</span>
+          </label>
+        </div>
+
         <div class="table-scroll">
           <table class="data-table expected-table internal-billing-table">
             <colgroup>
+              <col class="internal-col-check">
               <col class="internal-col-company">
               <col class="internal-col-invoice">
               <col class="internal-col-num">
@@ -1196,6 +1238,7 @@ function renderInternalBillingCompanyBlock(company, index) {
             </colgroup>
             <thead>
               <tr>
+                <th class="internal-check-col"></th>
                 <th>${t('internal.toCompany')}</th>
                 <th>${t('internal.invoice')}</th>
                 <th class="num">${t('internal.net')}</th>
@@ -1210,7 +1253,7 @@ function renderInternalBillingCompanyBlock(company, index) {
             </tbody>
             <tfoot>
               <tr>
-                <th colspan="2">${t('summary.total')}</th>
+                <th colspan="3">${t('summary.total')}</th>
                 <th class="num js-internal-total" data-company-id="${company.companyId}" data-total-field="net">${formatNum(totals.net)}</th>
                 <th class="num js-internal-total" data-company-id="${company.companyId}" data-total-field="vat">${formatNum(totals.vat)}</th>
                 <th class="num js-internal-total" data-company-id="${company.companyId}" data-total-field="gross">${formatNum(totals.gross)}</th>
@@ -1266,6 +1309,21 @@ function syncCompanyDisplayNames() {
       el.textContent = name;
     });
   });
+}
+
+function syncInternalMasterCheckbox(companyId) {
+  const checkbox = document.querySelector(`.internal-master-checkbox[data-company-id="${companyId}"]`);
+  if (!checkbox) return;
+
+  const entries = getInternalInvoicesForCompany(companyId);
+  const checkedCount = entries.filter(entry => entry.includeInExpected).length;
+
+  checkbox.checked = entries.length > 0 && checkedCount === entries.length;
+  checkbox.indeterminate = checkedCount > 0 && checkedCount < entries.length;
+}
+
+function syncAllInternalMasterCheckboxes() {
+  getCompanies().forEach(company => syncInternalMasterCheckbox(company.companyId));
 }
 
 async function resetCache() {
@@ -1355,6 +1413,7 @@ function renderApp() {
 
   applyStaticTranslations();
   syncCompanyDisplayNames();
+  syncAllInternalMasterCheckboxes();
   updateNeedsFill();
   recalcAll();
 
@@ -1711,7 +1770,7 @@ function collectDataAoA() {
   });
 
   aoa.push([]);
-  aoa.push(['Section', 'EntryId', 'FromCompany', 'ToCompany', 'InvoiceNo', 'Net', 'Vat', 'Gross', 'Remaining']);
+  aoa.push(['Section', 'EntryId', 'FromCompany', 'ToCompany', 'IncludeInExpected', 'InvoiceNo', 'Net', 'Vat', 'Gross', 'Remaining']);
 
   getInternalInvoices().forEach(entry => {
     aoa.push([
@@ -1719,6 +1778,7 @@ function collectDataAoA() {
       entry.entryId,
       entry.fromCompanyId,
       entry.toCompanyId,
+      entry.includeInExpected ? '1' : '0',
       entry.invoiceNo,
       formatNum(parseNum(entry.net)),
       formatNum(parseNum(entry.vat)),
@@ -1915,15 +1975,18 @@ function applyImportFromAoA(aoa) {
     }
 
     if (first === 'internalInvoiceRow' && r.length >= 9) {
+      const hasIncludeColumn = r.length >= 10;
+
       nextState.internalInvoices.push(normalizeInternalInvoiceEntry({
         entryId: r[1],
         fromCompanyId: r[2],
         toCompanyId: r[3],
-        invoiceNo: r[4],
-        net: r[5],
-        vat: r[6],
-        gross: r[7],
-        remaining: r[8],
+        includeInExpected: hasIncludeColumn ? r[4] : false,
+        invoiceNo: hasIncludeColumn ? r[5] : r[4],
+        net: hasIncludeColumn ? r[6] : r[5],
+        vat: hasIncludeColumn ? r[7] : r[6],
+        gross: hasIncludeColumn ? r[8] : r[7],
+        remaining: hasIncludeColumn ? r[9] : r[8],
       }));
       return;
     }
@@ -2382,6 +2445,29 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('change', e => {
+    if (e.target.matches('.internal-include-checkbox')) {
+      const entry = findInternalInvoiceEntry(e.target.dataset.entryId);
+      if (entry) {
+        entry.includeInExpected = e.target.checked;
+        syncInternalMasterCheckbox(entry.fromCompanyId);
+        scheduleSave();
+      }
+      return;
+    }
+
+    if (e.target.matches('.internal-master-checkbox')) {
+      const companyId = e.target.dataset.companyId;
+      const checked = e.target.checked;
+
+      getInternalInvoicesForCompany(companyId).forEach(entry => {
+        entry.includeInExpected = checked;
+      });
+
+      renderApp();
+      scheduleSave();
+      return;
+    }
+
     if (e.target.matches('.currency-select')) {
       const acc = findAccount(
         e.target.dataset.companyId,
